@@ -17,6 +17,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.function.Consumer;
 
+import org.hibernate.reactive.mutiny.Mutiny;
+
 @Slf4j
 @Path("/hello")
 public class ExampleResource {
@@ -26,7 +28,7 @@ public class ExampleResource {
     Emitter<Event> eventEmitter;
 
     @Inject
-    MyEntityRepository repository;
+    Mutiny.SessionFactory factory;
 
     @GET
     @Path("invoke")
@@ -48,7 +50,7 @@ public class ExampleResource {
 
     private Uni<MyEntity> findItemById(Long id) {
         //We don't do a real lookup by id here for the demo
-        return repository.findAll().firstResult()
+        return factory.withSession( session -> session.createQuery( "from MyEntity", MyEntity.class ).getSingleResult() )
                 .onItem().ifNotNull().invoke(myEntity -> log.info("entity found " + myEntity.id))
                 .onItem().ifNull().failWith(new Exception("No item found for id " + id));
     }

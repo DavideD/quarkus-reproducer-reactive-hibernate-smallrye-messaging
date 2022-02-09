@@ -33,8 +33,8 @@ public class ExampleResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> invokeFetchEntityAndGreetAndLog(@QueryParam("id") Long id) {
         return findItemById(id)
-                .onItem().invoke(entity -> eventEmitter.send(event(entity)))
-                .onItem().transform(entity -> Response.accepted(entity).build());
+                .call(entity -> Uni.createFrom().completionStage(eventEmitter.send(event(entity))))
+                .map(entity -> Response.accepted(entity).build());
     }
 
     @GET
@@ -42,8 +42,8 @@ public class ExampleResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> callFetchEntityAndGreetAndLog(@QueryParam("id") Long id) {
         return findItemById(id)
-                .onItem().call(entity -> Uni.createFrom().completionStage(eventEmitter.send(event(entity))))
-                .onItem().transform(entity -> Response.accepted(entity).build());
+                .call(entity -> Uni.createFrom().completionStage(eventEmitter.send(event(entity))))
+                .map(entity -> Response.accepted(entity).build());
     }
 
     private Uni<MyEntity> findItemById(Long id) {

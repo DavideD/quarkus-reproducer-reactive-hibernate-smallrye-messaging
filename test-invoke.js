@@ -19,7 +19,7 @@ export const options = {
 export default () => {
     const res = http.get(`${BASE_URL}?id=1`, {});
 
-    check(res, { 'status was 200': (r) => r.status === 200 });
+    check(res, { 'status was 202': (r) => r.status === 202 });
 
     sleep(1);
 };

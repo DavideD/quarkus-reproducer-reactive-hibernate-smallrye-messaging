@@ -8,8 +8,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.hibernate.reactive.mutiny.Mutiny;
-
 import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.MutinyEmitter;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +22,7 @@ public class ExampleResource {
     MutinyEmitter<Event> eventEmitter;
 
     @Inject
-    Mutiny.SessionFactory factory;
+    MyEntityRepository repository;
 
     @GET
     @Path("invoke")
@@ -50,7 +48,7 @@ public class ExampleResource {
 
     private Uni<MyEntity> findItemById(Long id) {
         //We don't do a real lookup by id here for the demo
-        return factory.withSession( session -> session.createQuery( "from MyEntity", MyEntity.class ).getSingleResult() )
+        return repository.findAll().firstResult()
                 .onItem().ifNotNull().invoke(myEntity -> log.info("entity found " + myEntity.id))
                 .onItem().ifNull().failWith(new Exception("No item found for id " + id));
     }

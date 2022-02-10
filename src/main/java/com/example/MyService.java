@@ -21,13 +21,14 @@ public class MyService {
     Mutiny.SessionFactory factory;
 
     @Incoming(Event.FIRE_AND_FORGET)
-    public Uni<Void> fireForget(Event event) {
-        return factory.withTransaction( session -> session.persist( event ) );
+    @ReactiveTransactional
+    public Uni<Event> fireForget(Event event) {
+        return event.persist();
     }
 
     @Incoming("event-uni")
     @ReactiveTransactional
-    public Uni<Void> onMessage(Event event) {
-        return factory.withTransaction( session -> session.persist( event ) );
+    public Uni<Event> onMessage(Event event) {
+        return event.persist();
     }
 }

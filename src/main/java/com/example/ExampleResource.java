@@ -1,13 +1,5 @@
 package com.example;
 
-import io.quarkus.hibernate.reactive.panache.Panache;
-import io.quarkus.runtime.StartupEvent;
-import io.smallrye.mutiny.Uni;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-
-import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -15,9 +7,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.function.Consumer;
 
 import org.hibernate.reactive.mutiny.Mutiny;
+
+import io.smallrye.mutiny.Uni;
+import io.smallrye.reactive.messaging.MutinyEmitter;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.reactive.messaging.Channel;
 
 @Slf4j
 @Path("/hello")
@@ -25,7 +21,7 @@ public class ExampleResource {
 
     @Inject
     @Channel(Event.FIRE_AND_FORGET)
-    Emitter<Event> eventEmitter;
+    MutinyEmitter<Event> eventEmitter;
 
     @Inject
     Mutiny.SessionFactory factory;
@@ -35,8 +31,10 @@ public class ExampleResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> invokeFetchEntityAndGreetAndLog(@QueryParam("id") Long id) {
         return findItemById(id)
-                .call(entity -> Uni.createFrom().completionStage(eventEmitter.send(event(entity))))
-                .map(entity -> Response.accepted(entity).build());
+                .map(this::event)
+                .call(eventEmitter::send)
+                .map(Response::accepted)
+                .map(Response.ResponseBuilder::build);
     }
 
     @GET
@@ -44,8 +42,10 @@ public class ExampleResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> callFetchEntityAndGreetAndLog(@QueryParam("id") Long id) {
         return findItemById(id)
-                .call(entity -> Uni.createFrom().completionStage(eventEmitter.send(event(entity))))
-                .map(entity -> Response.accepted(entity).build());
+                .map(this::event)
+                .call(eventEmitter::send)
+                .map(Response::accepted)
+                .map(Response.ResponseBuilder::build);
     }
 
     private Uni<MyEntity> findItemById(Long id) {
